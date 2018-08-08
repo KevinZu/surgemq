@@ -28,7 +28,11 @@ func main() {
 	//	msg.SetPassword([]byte("verysecret"))
 
 	// Connects to the remote server at 127.0.0.1 port 1883
-	c.Connect("tcp://127.0.0.1:1883", msg)
+	err := c.Connect("tcp://172.17.208.21:1883", msg)
+	if err != nil {
+		fmt.Printf("++++++++++++++ connect err:%v\n", err)
+		return
+	}
 	/*
 		// Creates a new SUBSCRIBE message to subscribe to topic "abc"
 		submsg := message.NewSubscribeMessage()
@@ -42,29 +46,34 @@ func main() {
 		c.Subscribe(submsg, nil, nil)
 	*/
 	// Creates a new PUBLISH message with the appropriate contents for publishing
+	///ch <- true
+	///
+	pubmsg := message.NewPublishMessage()
+	//pubmsg.SetPacketId(2)
+	pubmsg.SetTopic([]byte("/sys/dev1/"))
 
+	pubmsg.SetQoS(2)
+
+	//pubmsg.SetPayload( /*make([]byte, 1024)*/ []byte("123"))
+	var i int = 1
 	for {
 		//if cnt != 0 {
 		//	<-tick.C
 		//}
-
-		pubmsg := message.NewPublishMessage()
-		//pubmsg.SetPacketId(2)
-		pubmsg.SetTopic([]byte("abc"))
-
-		pubmsg.SetQoS(0)
+		pld := "data" + fmt.Sprint("-%d", i)
+		pubmsg.SetPayload( /*make([]byte, 1024)*/ []byte(pld))
 
 		pubmsg.SetPayload( /*make([]byte, 1024)*/ []byte("hello world!"))
 		// Publishes to the server by sending the message
-		c.Publish(pubmsg, onComplate)
-
-		pubmsg1 := message.NewPublishMessage()
+		c.Publish(pubmsg, onComplate1)
+		i++
+		/*pubmsg1 := message.NewPublishMessage()
 		//pubmsg.SetPacketId(2)
 		pubmsg1.SetTopic([]byte("helloworld"))
 
-		pubmsg1.SetQoS(0)
+		pubmsg1.SetQoS(0)*/
 
-		pubmsg1.SetPayload( /*make([]byte, 1024)*/ []byte("hehehe!"))
+		//pubmsg1.SetPayload( /*make([]byte, 1024)*/ []byte("456"))
 		// Publishes to the server by sending the message
 		c.Publish(pubmsg1, nil)
 

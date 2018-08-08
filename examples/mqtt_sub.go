@@ -33,19 +33,25 @@ func main() {
 
 	msg := message.NewConnectMessage()
 	msg.SetVersion(4)
+	msg.SetWillQos(2)
 	msg.SetCleanSession(true)
 	msg.SetClientId([]byte(fmt.Sprintf("pingmqclient%d%d", os.Getpid(), time.Now().Unix())))
-	msg.SetKeepAlive(300)
+	msg.SetKeepAlive(100)
+	msg.SetWillTopic([]byte("will"))
 
 	// Connects to the remote server at 127.0.0.1 port 1883
-	c.Connect("tcp://127.0.0.1:1883", msg)
+	err := c.Connect("tcp://127.0.0.1:1883", msg)
+	if err != nil {
+		fmt.Printf("============= connect err:%v\n", err)
+		return
+	}
 
 	// Creates a new SUBSCRIBE message to subscribe to topic "abc"
 	submsg := message.NewSubscribeMessage()
-	submsg.AddTopic([]byte("abc"), 0)
+	submsg.AddTopic([]byte("/sys/dev1/"), 0)
 
 	subhello := message.NewSubscribeMessage()
-	subhello.AddTopic([]byte("helloworld"), 0)
+	subhello.AddTopic([]byte("/sys/dev2/"), 0)
 
 	// Subscribes to the topic by sending the message. The first nil in the function
 	// call is a OnCompleteFunc that should handle the SUBACK message from the server.
@@ -81,4 +87,18 @@ func onHelloPublish(msg *message.PublishMessage) error {
 	fmt.Printf("%s\n", msg.Payload())
 	//log.Println(pr)
 	return nil
+}
+func SendPublish(c *service.Client) error {
+	for {
+		time.Sleep(time.Second * 80)
+		pubmsg := message.NewPublishMessage()
+		//pubmsg.SetPacketId(2)
+		pubmsg.SetTopic([]byte("/sys"))
+
+		pubmsg.SetQoS(1)
+
+		pubmsg.SetPayload( /*make([]byte, 1024)*/ []byte("1"))
+		// Publishes to the server by sending the message
+		c.Publish(pubmsg, nil)
+	}
 }
